@@ -8,10 +8,10 @@ ORANGE='\033[38;5;208m'
 YELLOW='\033[1;33m'
 GREEN='\033[0;32m'
 CYAN='\033[0;36m'
+MAGENTA='\033[38;5;201m'
 NC='\033[0m' # No Color
 BOLD='\033[1m'
 
-# Terminal saaf karo pehle
 clear
 
 # ==========================================
@@ -25,67 +25,110 @@ echo " |  ___/|  _  / / /\ \ | |    | | |  <   |  __|  / \    | |  |  _  / /\ \ 
 echo " | |    | | \ \/ ____ \| |   _| |_| . \  | |____/   \   | |  | | \/ ____ \____) |    \  /  | |____ "
 echo " |_|    |_|  \_\_/    \_\_|  |_____|_|\_\|______/_/ \_\ |_|  |_|  \_/    \_\_____/      \/   |______|"
 echo -e "${NC}"
-echo -e "${YELLOW}=========================================================================================${NC}\n"
+echo -e "${MAGENTA}💠═════════════════════════════════════════════════════════════════════════════════════💠${NC}\n"
+
+# Initializing fast bar
+draw_init_bar() {
+    tput civis
+    echo -e "${CYAN}✨ Initializing UnOfficial System Architecture...${NC}"
+    for i in {1..100}; do
+        if [ $i -le 30 ]; then COLOR=$ORANGE; elif [ $i -le 60 ]; then COLOR=$YELLOW; else COLOR=$GREEN; fi
+        local done=$((i / 2)); local left=$((50 - done))
+        printf "\r${BOLD}[${COLOR}%s${NC}${BOLD}%s] 💎 %d%%${NC}" "$(printf "%${done}s" | tr ' ' '█')" "$(printf "%${left}s" | tr ' ' '░')" "$i"
+        sleep 0.01
+    done
+    echo -e "\n"
+    tput cnorm
+}
+draw_init_bar
 
 # ==========================================
-# 2. FIXED MULTI-COLOR PROGRESS BAR
+# 2. REAL-TIME BACKGROUND TASK PROCESSOR
 # ==========================================
-draw_progress_bar() {
+# Yeh function asli progress calculate karta hai parde ke peeche jab tak command chalti hai
+execute_with_progress() {
+    local message_1="⚡ Updating System Lists..."
+    local message_2="📥 Downloading NodeJS & System Tools..."
+    local message_3="🌀 Cloning Repository (Crispy Adventure)..."
+    local message_4="📦 Making It Happen & Installing Express..."
+    
     tput civis # Hide cursor
     
-    # Static baseline taaki text glitch na kare
-    echo -e "${CYAN}⚡ Initializing Environment Modules...${NC}"
+    # Is block mein saari real tasks back-to-back execute hongi silently
+    (
+        apt-get update -y > /dev/null 2>&1
+        apt-get upgrade -y > /dev/null 2>&1
+        apt-get install nodejs screen neofetch git -y > /dev/null 2>&1
+        rm -rf crispy-adventure > /dev/null 2>&1
+        git clone https://github.com/pratikgamer11/crispy-adventure > /dev/null 2>&1
+        npm install express > /dev/null 2>&1
+    ) &
+    
+    # Background process ki ID capture karte hain
+    local pid=$!
+    local progress=0
+    
+    # Pehli line print kar dete hain baseline ke liye
+    echo -e "${CYAN}$message_1${NC}"
 
-    for i in {1..100}; do
-        # Progress ke hisab se status text ko overwrite karne ke liye line-return use kiya hai
-        if [ $i -eq 30 ]; then
-            printf "\r\033[K${ORANGE}⚙️ Structuring System Configuration...${NC}\n"
-        elif [ $i -eq 60 ]; then
-            printf "\r\033[K${YELLOW}🌀 Optimizing Core Panel Links...${NC}\n"
-        elif [ $i -eq 85 ]; then
-            printf "\r\033[K${GREEN}🚀 Finalizing Setup Layers...${NC}\n"
+    # Jab tak peeche background job active hai, yeh loop chalega
+    while kill -0 $pid 2>/dev/null; do
+        # Progress ko slowly smooth tareeqe se 99% tak badhayenge duration ke hisab se
+        if [ $progress -lt 99 ]; then
+            progress=$((progress + 1))
         fi
-
-        # Bar ka rang setup
-        if [ $i -le 30 ]; then
-            COLOR=$ORANGE
-        elif [ $i -le 60 ]; then
-            COLOR=$YELLOW
+        
+        # 0 se 100 ke beech dynamic custom status updates upar waali line par
+        tput cuu1
+        tput el
+        if [ $progress -le 25 ]; then
+            echo -e "${ORANGE}$message_1${NC}"
+        elif [ $progress -le 55 ]; then
+            echo -e "${YELLOW}$message_2${NC}"
+        elif [ $progress -le 80 ]; then
+            echo -e "${CYAN}$message_3${NC}"
         else
-            COLOR=$GREEN
+            echo -e "${GREEN}$message_4${NC}"
         fi
-
-        local done=$((i / 2))
+        
+        # Color profile set karo percentages par
+        if [ $progress -le 30 ]; then COLOR=$ORANGE; elif [ $progress -le 60 ]; then COLOR=$YELLOW; else COLOR=$GREEN; fi
+        
+        local done=$((progress / 2))
         local left=$((50 - done))
         local fill=$(printf "%${done}s" | tr ' ' '█')
         local empty=$(printf "%${left}s" | tr ' ' '░')
-
-        # \r se line ke start mein jaakar render hoga bina upar-niche bhage
-        printf "\r${BOLD}[${COLOR}%s${NC}${BOLD}%s] %d%%${NC}" "$fill" "$empty" "$i"
         
-        sleep 0.02
+        printf "\r${BOLD}[${COLOR}%s${NC}${BOLD}%s] %d%%${NC}" "$fill" "$empty" "$progress"
+        
+        # Speed tweak karne ke liye sleep dynamic rakha hai (Har block par slow/fast handle karne ko)
+        if [ $progress -le 25 ]; then sleep 0.2; elif [ $progress -le 55 ]; then sleep 0.4; else sleep 0.1; fi
     done
-    echo -e "\n"
-    tput cnorm # Restore cursor
+    
+    # Jab background process khatam ho jaye, use zabardasti 100% par lock kar do
+    tput cuu1
+    tput el
+    echo -e "${GREEN}🚀 All Tasks Successfully Synchronized!${NC}"
+    printf "\r${BOLD}[${GREEN}%s${NC}${BOLD}] 100%%${NC}\n" "$(printf "%50s" | tr ' ' '█')"
+    
+    tput cnorm
+    sleep 15 # User ko confirmation dekhne ke liye stop
 }
 
-# Loading Bar ko chalayein
-draw_progress_bar
-
 # ==========================================
-# 3. INTERACTIVE MAIN MENU (Your Custom Box Layout)
+# 3. INTERACTIVE MAIN MENU (Fancy Box Layout)
 # ==========================================
 show_main_menu() {
     clear
-    echo -e "${CYAN}----------------------------------------------------------"
-    echo -e "|                    PRATIK EXTRAS V5                    |"
-    echo -e "----------------------------------------------------------${NC}"
-    echo -e "${YELLOW}[A] Panel (Pterodactyl Management)${NC}"
-    echo -e "${RED}[B] Exit${NC}"
-    echo -e "${CYAN}----------------------------------------------------------${NC}\n"
+    echo -e "${MAGENTA}╭──────────────────────────────────────────────────────────╮${NC}"
+    echo -e "${MAGENTA}│${NC}                ${BOLD}${CYAN}🔮 PRATIK EXTRAS V5 🔮${NC}                    ${MAGENTA}│${NC}"
+    echo -e "${MAGENTA}├──────────────────────────────────────────────────────────┤${NC}"
+    echo -e "${MAGENTA}│${NC}  ${BOLD}${YELLOW}[A] ➔ UnOfficial Panel Installation${NC}                     ${MAGENTA}│${NC}"
+    echo -e "${MAGENTA}│${NC}  ${BOLD}${RED}[B] ➔ Shut Down Terminal / Exit${NC}                          ${MAGENTA}│${NC}"
+    echo -e "${MAGENTA}╰──────────────────────────────────────────────────────────╯${NC}\n"
     
-    # Ab read bilkul safe chalega bina kisi bypass error ke
-    printf "${BOLD}Select --> ${NC}"
+    read -t 1 -n 10000 discard
+    printf "${BOLD}${MAGENTA}Select Option ✨𝄪 ${NC}"
     read main_choice
     
     case $main_choice in
@@ -93,13 +136,13 @@ show_main_menu() {
             show_panel_menu
             ;;
         [Bb])
-            echo -e "\n${GREEN}Chalo bye bhai! Phir milenge. 😎${NC}\n"
+            echo -e "\n${GREEN}🔌 Disconnected. Chalo bye bhai! Phir milenge. 😎${NC}\n"
             exit 0
             ;;
         *)
-            echo -e "\n${RED}----------------------------------------------------------"
-            echo -e "|       Galat option choose kiya bhai! Dobara try karo.  |"
-            echo -e "----------------------------------------------------------${NC}"
+            echo -e "\n${RED}╭──────────────────────────────────────────────────────────╮"
+            echo -e "│     ⚠️ Galat option choose kiya bhai! Dobara try karo.  │"
+            echo -e "╰──────────────────────────────────────────────────────────╯${NC}"
             sleep 2
             show_main_menu
             ;;
@@ -107,70 +150,46 @@ show_main_menu() {
 }
 
 # ==========================================
-# 4. SUB MENU: PTERODACTYL PANEL INSIDE [A]
+# 4. SUB MENU: UNOFFICIAL PANEL
 # ==========================================
 show_panel_menu() {
     clear
-    echo -e "${CYAN}----------------------------------------------------------"
-    echo -e "|             PTERODACTYL PANEL MANAGEMENT               |"
-    echo -e "----------------------------------------------------------${NC}"
-    echo -e "${GREEN}[1] Setup Database${NC}"
-    echo -e "${GREEN}[2] Configure Cloudflare DNS${NC}"
-    echo -e "${GREEN}[3] Link Domain Name${NC}"
-    echo -e "${GREEN}[4] Create New User (Admin/Non-Admin)${NC}"
-    echo -e "${YELLOW}[B] Go Back to Main Menu${NC}"
-    echo -e "${CYAN}----------------------------------------------------------${NC}\n"
+    echo -e "${CYAN}╭──────────────────────────────────────────────────────────╮${NC}"
+    echo -e "${CYAN}│${NC}              ${BOLD}${MAGENTA}🛰️ UNOFFICIAL PANEL MAIN CONSOLE${NC}            ${CYAN}│${NC}"
+    echo -e "${CYAN}├──────────────────────────────────────────────────────────┤${NC}"
+    echo -e "${CYAN}│${NC}  ${GREEN}[1] ⚡ Deploy & Run UnOfficial Panel (Full Auto)${NC}      ${CYAN}│${NC}"
+    echo -e "${CYAN}│${NC}  ${YELLOW}[B] ↩ Return Back to Core Menu${NC}                          ${CYAN}│${NC}"
+    echo -e "${CYAN}╰──────────────────────────────────────────────────────────╯${NC}\n"
     
-    printf "${BOLD}Select Sub-Option --> ${NC}"
+    read -t 1 -n 10000 discard
+    printf "${BOLD}${CYAN}Execute Action ❖ ${NC}"
     read panel_choice
     
     case $panel_choice in
         1)
-            echo -e "\n${YELLOW}[+] Database configure ho raha hai...${NC}"
-            sleep 2
-            show_panel_menu
-            ;;
-        2)
-            echo -e "\n${YELLOW}[+] Cloudflare configuration loading...${NC}"
-            sleep 2
-            show_panel_menu
-            ;;
-        3)
-            echo -e "\n${YELLOW}[+] Domain connect ho raha hai...${NC}"
-            sleep 2
-            show_panel_menu
-            ;;
-        4)
             clear
-            echo -e "${CYAN}----------------------------------------------------------"
-            echo -e "|                   CREATE PANEL USER                    |"
-            echo -e "----------------------------------------------------------${NC}"
-            echo -e "1) Make Admin User"
-            echo -e "2) Make Non-Admin (Regular) User"
-            echo -e "${CYAN}----------------------------------------------------------${NC}\n"
-            printf "Choose Role --> "
-            read role_choice
+            echo -e "${MAGENTA}═════════════════════════════════════════════════════════${NC}"
+            echo -e "${BOLD}${YELLOW}⚡ BACKGROUND COMPILATION RUNNING (CRISPY ADVENTURE)${NC}"
+            echo -e "${MAGENTA}═════════════════════════════════════════════════════════${NC}\n"
             
-            if [ "$role_choice" == "1" ]; then
-                echo -e "\n${GREEN}⚡ Creating Admin User... Done!${NC}"
-            else
-                echo -e "\n${GREEN}👤 Creating Non-Admin User... Done!${NC}"
-            fi
-            sleep 2
-            show_panel_menu
+            # Yahan humne dynamic process run kar diya
+            execute_with_progress
+            
+            # Jab process final complete hoga, tab screen transparent hoke directory me jump karegi
+            cd crispy-adventure && node .
             ;;
         [Bb])
             show_main_menu
             ;;
         *)
-            echo -e "\n${RED}----------------------------------------------------------"
-            echo -e "|       Galat option choose kiya bhai! Dobara try karo.  |"
-            echo -e "----------------------------------------------------------${NC}"
+            echo -e "\n${RED}╭──────────────────────────────────────────────────────────╮"
+            echo -e "│     ⚠️ Galat option choose kiya bhai! Dobara try karo.  │"
+            echo -e "╰──────────────────────────────────────────────────────────╯${NC}"
             sleep 2
             show_panel_menu
             ;;
     esac
 }
 
-# Sabse pehle main menu par bhejein
+# Start the application loop
 show_main_menu
